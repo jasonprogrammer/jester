@@ -17,6 +17,7 @@ type
     bindAddr*: string
     reusePort*: bool
     futureErrorHandler*: proc (fut: Future[void]) {.closure, gcsafe.}
+    numThreads*: int
 
   JesterError* = object of Exception
 

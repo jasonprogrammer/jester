@@ -73,7 +73,7 @@ type
     of RouteCode:
       data: ResponseData
 
-const jesterVer = "0.4.3"
+const jesterVer = "0.4.4"
 
 proc toStr(headers: Option[RawHeaders]): string =
   return $newHttpHeaders(headers.get(@({:})))
@@ -406,7 +406,8 @@ proc handleRequest(jes: Jester, httpReq: NativeRequest): Future[void] =
 proc newSettings*(
   port = Port(5000), staticDir = getCurrentDir() / "public",
   appName = "", bindAddr = "", reusePort = false,
-  futureErrorHandler: proc (fut: Future[void]) {.closure, gcsafe.} = nil
+  futureErrorHandler: proc (fut: Future[void]) {.closure, gcsafe.} = nil,
+  numThreads = 0
 ): Settings =
   result = Settings(
     staticDir: staticDir,
@@ -414,7 +415,8 @@ proc newSettings*(
     port: port,
     bindAddr: bindAddr,
     reusePort: reusePort,
-    futureErrorHandler: futureErrorHandler
+    futureErrorHandler: futureErrorHandler,
+    numThreads: numThreads
   )
 
 proc register*(self: var Jester, matcher: MatchProc) =
@@ -494,7 +496,8 @@ proc serve*(
       proc (req: httpbeast.Request): Future[void] =
          {.gcsafe.}:
           result = handleRequest(jes, req),
-      httpbeast.initSettings(self.settings.port, self.settings.bindAddr)
+      httpbeast.initSettings(self.settings.port, self.settings.bindAddr,
+                             self.settings.numThreads)
     )
   else:
     self.httpServer = newAsyncHttpServer(reusePort=self.settings.reusePort)
